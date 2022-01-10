@@ -18,7 +18,9 @@ class MyWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Procesiranje slike")
         self.pp = pp
+        self.filepath = None
         self.init_ui()
+
 
     def init_ui(self):
         self.label = QtWidgets.QLabel(self)
@@ -50,7 +52,7 @@ class MyWindow(QMainWindow):
         #self.c_box.setFont(font)
         #self.c_box.setLayoutDirection(QtCore.Qt.LeftToRight)
 
-        self.tab = ReadTabW.getTab(self.clicked)
+        self.tab = ReadTabW.getTab(self.clicked, self.pp.change_orig)
         upper_layout.addWidget(self.tab)
 
         #for t in self.pp.trans():
@@ -98,13 +100,10 @@ class MyWindow(QMainWindow):
         self.label.setPixmap(QtGui.QPixmap.fromImage(image))
 
     def open_image(self, default=None):
-
-        print(default)
-        if default != None and default != False:
+        if default:
             image_path = default
         else:
             image_path, _ = QFileDialog.getOpenFileName()
-        print(image_path)
         if not image_path:
             return
         self.pp.read_img(image_path)
@@ -135,10 +134,18 @@ class MyWindow(QMainWindow):
             self.set_img(img)
 
 
+def win_with_image(pp, image_path):
+    w = MyWindow(pp)
+    w.filepath = image_path
+    w.open_image(w.filepath)
+    return w
+
+
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     pp = PP()
     app = QApplication(sys.argv)
-    win = MyWindow(pp)
+    image = "/home/rasapant/Desktop/Python/git/ProcesiranjeSlike/monaliza.jpg"
+    win = win_with_image(pp, image)
     win.show()
     sys.exit(app.exec())
