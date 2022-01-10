@@ -23,7 +23,7 @@ class MyWindow(QMainWindow):
     def init_ui(self):
         self.label = QtWidgets.QLabel(self)
         self.label.setScaledContents(True)
-        self.label.setMinimumSize(1, 1)
+        self.label.setMinimumSize(30, 30)
 
         outer_layout = QVBoxLayout()
 
@@ -78,6 +78,7 @@ class MyWindow(QMainWindow):
         self.actionsave.setShortcut("Ctrl+s")
         self.actionsave.triggered.connect(self.save_image)
 
+        self.open_image("monaliza.jpg")
 
         self.menu_file.addAction(self.actionopen)
         self.menu_file.addAction(self.actionsave)
@@ -96,8 +97,14 @@ class MyWindow(QMainWindow):
         image = QImage(frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
         self.label.setPixmap(QtGui.QPixmap.fromImage(image))
 
-    def open_image(self):
-        image_path, _ = QFileDialog.getOpenFileName()
+    def open_image(self, default=None):
+
+        print(default)
+        if default != None and default != False:
+            image_path = default
+        else:
+            image_path, _ = QFileDialog.getOpenFileName()
+        print(image_path)
         if not image_path:
             return
         self.pp.read_img(image_path)
