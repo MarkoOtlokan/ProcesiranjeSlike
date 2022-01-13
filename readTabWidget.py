@@ -14,8 +14,8 @@ class ReadTabW:
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("add_brightness")
         sl1.setValue(0)
-        sl1.setMinimum(-400)
-        sl1.setMaximum(400)
+        sl1.setMinimum(-255)
+        sl1.setMaximum(255)
         sl1.setSingleStep(10)
 
         w = MyWidget(sl1, name="brightness", slot=slot)### VAZNO!!! MyWidget name mora odgovarati
@@ -25,12 +25,12 @@ class ReadTabW:
                                                        ### funkcije cije ime deli (taj unutar kojeg se nalaze) Mywidget!
 
         sl1 = QSlider(Qt.Horizontal)
-        sl1.setObjectName("sat")
+        sl1.setObjectName("p")
         sl1.setValue(0)
-        sl1.setMinimum(-400)
-        sl1.setMaximum(400)
-        sl1.setSingleStep(10)
-        w2 = MyWidget(sl1, name="saturation", slot=slot)
+        sl1.setMinimum(-100)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+        w2 = MyWidget(sl1, name="contrast", slot=slot)
 
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
