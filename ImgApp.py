@@ -145,7 +145,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     pp = PP()
     app = QApplication(sys.argv)
-    image = "/home/rasapant/Desktop/Python/git/ProcesiranjeSlike/monaliza.jpg"
+    image = "/home/rasapant/Desktop/Python/git/ProcesiranjeSlike/driver.jpg"
     win = win_with_image(pp, image)
     win.show()
     sys.exit(app.exec())
