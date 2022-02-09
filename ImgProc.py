@@ -2,6 +2,7 @@ import time
 
 import cv2
 import numpy as np
+import func
 from itertools import cycle
 import logging
 from math import tan, sin, cos, pi
@@ -130,13 +131,18 @@ class PP:
         return True
 
     def saturation_helper(self, org_img, sat):
-        hsv = cv2.cvtColor(org_img, cv2.COLOR_BGR2HSV)
-        h, s, v = cv2.split(hsv)
-        s = cv2.add(s, sat)
-        s[s > 255] = 255
-        s[s < 0] = 0
-        final_hsv = cv2.merge((h, s, v))
-        self.img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
+        def non_overflowing_sum(a, b):
+            c = np.int16(a) + b
+            c[np.where(c > 255)] = 255
+            c[np.where(c < 0)] = 0
+            return np.uint8(c)
+
+        hsv = func.rgb_to_hsv_vectorized(org_img)
+        h, s, v = np.transpose(hsv, (2, 0, 1))
+        s = non_overflowing_sum(s, sat)
+
+        final_hsv = np.dstack((h, s, v))
+        self.img = func.hsv_to_bgr_vectorized(final_hsv)
 
     def func4(self, sat):
         self.saturation_helper(self.orig_img, sat)
