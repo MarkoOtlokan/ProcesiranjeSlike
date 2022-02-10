@@ -26,8 +26,6 @@ def apply_lut(img, lut):
     return img2
 
 
-
-
 class PP:
     def __init__(self):
         self.img = None

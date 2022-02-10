@@ -6,7 +6,7 @@ from WidgetHelper import MyWidget
 
 # test....
 class ReadTabW:
-    def getTab(slot, change_im):
+    def getTab(slot, change_pixelmap, change_orig):
         tab = QTabWidget()
 
         #for ... read in all widgets from file
@@ -89,9 +89,9 @@ class ReadTabW:
         tab.addTab(w5, w5.objectName())
         tab.addTab(w6, w6.objectName())
 
-        def temp_slot(_):
-            change_im()
-            tab.currentWidget().reset_gadgets()
+        def temp_slot(i):
+            change_pixelmap()
+            tab.widget(i).give_slot()
 
         tab.currentChanged.connect(temp_slot)
 
