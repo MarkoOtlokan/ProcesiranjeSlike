@@ -82,50 +82,9 @@ class PP:
         #self.img = apply_lut(self.img, lut)
         return True
 
-    def func3(self, angle=0, scale=0):
-        # treba ovako nesto manuelno odraditi....
-        def rotate_bound(image, angle):
-            # grab the dimensions of the image and then determine the
-            # center
-            (h, w) = image.shape[:2]
-            (cX, cY) = (w / 2, h / 2)
-
-            # grab the rotation matrix (applying the negative of the
-            # angle to rotate clockwise), then grab the sine and cosine
-            # (i.e., the rotation components of the matrix)
-            M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
-            cos = np.abs(M[0, 0])
-            sin = np.abs(M[0, 1])
-
-            # compute the new bounding dimensions of the image
-            nW = int((h * sin) + (w * cos))
-            nH = int((h * cos) + (w * sin))
-
-            # adjust the rotation matrix to take into account translation
-            M[0, 2] += (nW / 2) - cX
-            M[1, 2] += (nH / 2) - cY
-
-            # perform the actual rotation and return the image
-            return cv2.warpAffine(image, M, (nW, nH))
-
-        def rotate(image, angle, center=None, scale=1.0):
-            # grab the dimensions of the image
-            (h, w) = image.shape[:2]
-
-            # if the center is None, initialize it as the center of
-            # the image
-            if center is None:
-                center = (w // 2, h // 2)
-
-            # perform the rotation
-            M = cv2.getRotationMatrix2D(center, angle, scale)
-            rotated = cv2.warpAffine(image, M, (w, h))
-
-            # return the rotated image
-            return rotated
-
-        scale = (scale / 10) + 1
-        self.img = rotate(self.orig_img, angle, scale=scale)
+    def func3(self, angle=0, scale=1.0):
+        scale /= 10
+        self.img = func.rotate(self.orig_img, angle, scale)
         return True
 
     def saturation_helper(self, org_img, sat):

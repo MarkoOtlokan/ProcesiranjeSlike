@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 
 
@@ -48,3 +50,39 @@ def hsv_to_bgr_vectorized(img):  # return img with BGR format
 
     out = (np.dstack((r, g, b)) + m[..., None]) * 255
     return np.rint(out).astype(np.uint8)
+
+
+def rotate(img, angle, scale=1.0):
+    angle = angle * np.pi / 180
+    specific_point = np.array(img.shape[:2][::-1])/2
+    warp_mat = np.zeros((2,3))
+    a, b = np.cos(angle) * scale, np.sin(angle) * scale
+    warp_mat[:2,:2] = [[a, -b],[b, a]]
+    warp_mat[:2,2] = specific_point - np.matmul(warp_mat[:2,:2], specific_point)
+    return warpAffine(img, warp_mat)
+
+
+def warpAffine(I, M):
+    a, b = M[..., :2].T, M[..., 2]
+    x, y = I.shape[:2]
+    Xi, Yi = np.mgrid[0:x,0:y]
+    Xi = Xi.ravel().astype(np.uint16)
+    Yi = Yi.ravel().astype(np.uint16)
+    Iindex = np.column_stack((Xi,Yi))
+    Inew_index = np.matmul(Iindex, a) + b
+    img = np.zeros(I.shape)
+
+    l1 = Inew_index[..., 0].astype(np.uint16)
+    l2 = Inew_index[..., 1].astype(np.uint16)
+    l1and2mask = (l1 < x) & (l2 < y)
+    l1 = l1[l1and2mask]
+    l2 = l2[l1and2mask]
+    Xi = Xi[l1and2mask]
+    Yi = Yi[l1and2mask]
+    #logging.debug(f'I shape type: {I.shape}')
+    #logging.debug(f'img shape type: {img.shape}')
+    #logging.debug(f'l1 shape type: {l1.shape}')
+    #logging.debug(f'Xi shape type: {Xi.shape}')
+
+    img[Xi, Yi] = I[l1, l2]
+    return img.astype(np.uint8)
