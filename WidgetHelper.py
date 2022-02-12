@@ -7,46 +7,39 @@ class MyWidget(QWidget):
         super().__init__()
         self.setObjectName(name)
         self.slot = slot
-        self.el = el
         self.lay = QVBoxLayout()
         self.setLayout(self.lay)
-        self.init_el()
+        self.init_el(el)
 
-    def init_el(self):
-        for e in self.el:
+    def init_el(self, el):
+        for e in el:
             if isinstance(e, QSlider):
-                self.init_slider(e)
+                e.valueChanged.connect(self.give_slot)
             elif isinstance(e, QCheckBox):
-                self.init_checkbox(e)
+                e.stateChanged.connect(self.give_slot)
             elif isinstance(e, QPushButton):
-                self.init_button(e)
+                e.clicked.connect(self.give_slot)
             else:
                 raise Exception("MyWidget class got unexpected element!!")
             e.setParent(self)
+            self.lay.addWidget(e)
 
-    def init_slider(self, e):
-        self.lay.addWidget(e)
-        e.valueChanged.connect(lambda x: self.slot(**self.give_vals()))
-
-    def init_checkbox(self, e):
-        self.lay.addWidget(e)
-        e.stateChanged.connect(lambda: self.slot(**self.give_vals()))
-
-    def init_button(self, e):
-        self.lay.addWidget(e)
-        e.clicked.connect(lambda: self.slot(**self.give_vals()))
-
-    def reset_gadgets(self):
-        for e in self.el:
-            if isinstance(e, QSlider):
-                e.setValue(0)
+    def give_slot(self):
+        self.slot(**self.give_vals())
 
     def give_vals(self):
         d = {}
-        for e in self.el:
+        for e in self.children():
             if isinstance(e, QSlider):
                 d[e.objectName()] = e.value()
             elif isinstance(e, QCheckBox):
                 d[e.objectName()] = e.isChecked()
         return d
+
+    # def reset_gadgets(self):
+    #     for e in self.children():
+    #         if isinstance(e, QSlider):
+    #             e.setValue(0)
+
+
 

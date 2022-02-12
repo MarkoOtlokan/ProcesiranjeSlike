@@ -33,17 +33,13 @@ class MyWindow(QMainWindow):
         self.setCentralWidget(self.central_widget)
         self.central_widget.setLayout(outer_layout)
 
-        upper_layout = QHBoxLayout()
+        upper_layout = QVBoxLayout()
         bottom_layout = QVBoxLayout()
 
         bottom_layout.addWidget(self.label)
 
         outer_layout.addLayout(upper_layout)
         outer_layout.addLayout(bottom_layout)
-
-        #self.push_button = QtWidgets.QPushButton()
-        #self.push_button.setText("PushButton")
-        #self.push_button.clicked.connect(self.clicked)
 
         #self.c_box = QtWidgets.QComboBox(self)
         #font = QtGui.QFont()
@@ -52,8 +48,14 @@ class MyWindow(QMainWindow):
         #self.c_box.setFont(font)
         #self.c_box.setLayoutDirection(QtCore.Qt.LeftToRight)
 
-        self.tab = ReadTabW.getTab(self.clicked, self.pp.change_orig)
+        #self.tab = ReadTabW.getTab(self.clicked, self.pp.change_orig)
+        self.tab = ReadTabW.getTab(self.clicked, lambda: self.set_img(self.pp.orig_img), self.pp.change_orig)
         upper_layout.addWidget(self.tab)
+
+        push_button = QtWidgets.QPushButton()
+        push_button.setText("save changes")
+        push_button.clicked.connect(self.pp.change_orig)
+        upper_layout.addWidget(push_button)
 
         #for t in self.pp.trans():
         #    self.c_box.addItem(t)
@@ -145,7 +147,7 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
     pp = PP()
     app = QApplication(sys.argv)
-    image = "/home/rasapant/Desktop/Python/git/ProcesiranjeSlike/monaliza.jpg"
+    image = "/home/rasapant/Desktop/Python/git/ProcesiranjeSlike/driver.jpg"
     win = win_with_image(pp, image)
     win.show()
     sys.exit(app.exec())

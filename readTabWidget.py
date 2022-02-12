@@ -6,7 +6,7 @@ from WidgetHelper import MyWidget
 
 # test....
 class ReadTabW:
-    def getTab(slot, change_im):
+    def getTab(slot, change_pixelmap, change_orig):
         tab = QTabWidget()
 
         #for ... read in all widgets from file
@@ -14,8 +14,8 @@ class ReadTabW:
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("add_brightness")
         sl1.setValue(0)
-        sl1.setMinimum(-400)
-        sl1.setMaximum(400)
+        sl1.setMinimum(-255)
+        sl1.setMaximum(255)
         sl1.setSingleStep(10)
 
         w = MyWidget(sl1, name="brightness", slot=slot)### VAZNO!!! MyWidget name mora odgovarati
@@ -25,19 +25,73 @@ class ReadTabW:
                                                        ### funkcije cije ime deli (taj unutar kojeg se nalaze) Mywidget!
 
         sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("p")
+        sl1.setValue(0)
+        sl1.setMinimum(-100)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+        w2 = MyWidget(sl1, name="contrast", slot=slot)
+
+        # ROTATION
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("angle")
+        sl1.setValue(0)
+        sl1.setMinimum(-25)
+        sl1.setMaximum(25)
+        sl1.setSingleStep(1)
+
+        sl2 = QSlider(Qt.Horizontal)
+        sl2.setObjectName("scale")
+        sl2.setValue(10)
+        sl2.setMinimum(5)
+        sl2.setMaximum(20)
+        sl2.setSingleStep(1)
+        w3 = MyWidget(sl1, sl2, name="rotation", slot=slot)
+
+        # saturation
+        sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("sat")
         sl1.setValue(0)
-        sl1.setMinimum(-400)
-        sl1.setMaximum(400)
-        sl1.setSingleStep(10)
-        w2 = MyWidget(sl1, name="saturation", slot=slot)
+        sl1.setMinimum(-255)
+        sl1.setMaximum(255)
+        sl1.setSingleStep(5)
+        w4 = MyWidget(sl1, name="saturation", slot=slot)
+
+        # warmth
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("warm")
+        sl1.setValue(0)
+        sl1.setMinimum(0)
+        sl1.setMaximum(10)
+        sl1.setSingleStep(1)
+        w5 = MyWidget(sl1, name="warmth", slot=slot)
+
+        # fade
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("factor")
+        sl1.setValue(0)
+        sl1.setMinimum(0)
+        sl1.setMaximum(10)
+        sl1.setSingleStep(1)
+
+        sl2 = QSlider(Qt.Horizontal)
+        sl2.setObjectName("gray")
+        sl2.setValue(0)
+        sl2.setMinimum(0)
+        sl2.setMaximum(255)
+        sl2.setSingleStep(1)
+        w6 = MyWidget(sl1, sl2, name="fade", slot=slot)
 
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
+        tab.addTab(w3, w3.objectName())
+        tab.addTab(w4, w4.objectName())
+        tab.addTab(w5, w5.objectName())
+        tab.addTab(w6, w6.objectName())
 
-        def temp_slot(_):
-            change_im()
-            tab.currentWidget().reset_gadgets()
+        def temp_slot(i):
+            change_pixelmap()
+            tab.widget(i).give_slot()
 
         tab.currentChanged.connect(temp_slot)
 
