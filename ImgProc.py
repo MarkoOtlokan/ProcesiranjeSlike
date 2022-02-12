@@ -32,7 +32,9 @@ class PP:
         self.orig_img = None
         self.name2Trans = {"contrast": self.func2, "rotation": self.func3,
                            "brightness": self.func1, "saturation": self.func4,
-                           "warmth": self.func5, "fade": self.func6}
+                           "warmth": self.func5, "fade": self.func6,
+                           "highlight": self.func7, "shadow": self.func8,
+                           }
 
     def read_img(self, filepath):
         self.img = cv2.imread(filepath)
@@ -123,4 +125,49 @@ class PP:
         fade = np.zeros_like(self.orig_img)
         fade[:, :] = (gray, gray, gray)
         self.img = ((self.orig_img * factor) + (fade * (1 - factor))).astype('uint8')
+        return True
+
+    def func7(self, highlight=0):
+        self.func4(round(highlight * (-1) * 2.55))
+        highlight = highlight / 100
+        highlight += 1
+        print(highlight)
+
+        def help(y):
+            if highlight > 1:
+                abcd = None
+                if y > 128:
+                    abcd = (y - 128) * highlight + highlight * 128
+                else:
+                    abcd = y
+                return abcd
+            return (y - 128) * highlight + 128
+
+        highlightValue = np.array([help(i) for i in range(0, 256)]).clip(0, 255).astype('uint8')
+        logging.debug(f"lut table: {highlightValue}\n")
+        self.img = highlightValue[self.img]
+        return True
+
+    def func8(self, shadow=0):
+        self.func4(round(shadow * (-1) * 2.55))
+        shadow = shadow / 100
+        shadow += 1
+
+        def help(y):
+            if shadow > 1:
+                abcd = None
+                if y < 128:
+                    abcd = (y - 128 * shadow) * shadow + 128
+                else:
+                    abcd = y
+                return abcd
+            return (y - 128) * shadow + 128
+
+        contrast = np.array([help(i) for i in range(0, 256)]).clip(0, 255).astype('uint8')
+        logging.debug(f"lut table: {contrast}\n")
+        #self.img = np.vectorize(dict(enumerate(contrast)).get)(self.img)
+        #self.img = np.take(contrast, self.img)
+        self.img = contrast[self.img]
+        #warm = warm / 10
+        #self.img = ((self.orig_img * factor) + (fade * (1 - factor))).astype('uint8')
         return True

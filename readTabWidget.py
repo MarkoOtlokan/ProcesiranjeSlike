@@ -82,12 +82,32 @@ class ReadTabW:
         sl2.setSingleStep(1)
         w6 = MyWidget(sl1, sl2, name="fade", slot=slot)
 
+        # Highlights
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("highlight")
+        sl1.setValue(0)
+        sl1.setMinimum(-100)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+        w7 = MyWidget(sl1, name="highlight", slot=slot)
+
+        # Shadows
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("shadow")
+        sl1.setValue(0)
+        sl1.setMinimum(-100)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+        w8 = MyWidget(sl1, name="shadow", slot=slot)
+
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
         tab.addTab(w3, w3.objectName())
         tab.addTab(w4, w4.objectName())
         tab.addTab(w5, w5.objectName())
         tab.addTab(w6, w6.objectName())
+        tab.addTab(w7, w7.objectName())
+        tab.addTab(w8, w8.objectName())
 
         def temp_slot(i):
             change_pixelmap()
