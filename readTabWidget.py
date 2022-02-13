@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, QTabWidget, \
-    QSlider, QPushButton
+    QSlider, QPushButton, QCheckBox
 from PyQt5.QtCore import Qt
 
 from WidgetHelper import MyWidget
@@ -139,6 +139,29 @@ class ReadTabW:
         sl3.setSingleStep(1)
         w9 = MyWidget(sl1, sl2, sl3, name="zoom", slot=slot)
 
+        # Sharpen
+        cbox1 = QCheckBox()
+        cbox1.setObjectName("to_sharpen")
+        cbox1.setChecked(False)
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("step")
+        sl1.setMinimum(0)
+        sl1.setMaximum(10)
+        sl1.setValue(0)
+        sl1.setSingleStep(1)
+
+        w11 = MyWidget(cbox1, sl1, name="sharpen", slot=slot)
+
+        # Tilt shift
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("linear")
+        sl1.setMinimum(0)
+        sl1.setMaximum(10)
+        sl1.setValue(0)
+        sl1.setSingleStep(1)
+
+        w12 = MyWidget(sl1, name="tilt", slot=slot)
+
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
         tab.addTab(w3, w3.objectName())
@@ -148,6 +171,8 @@ class ReadTabW:
         tab.addTab(w7, w7.objectName())
         tab.addTab(w8, w8.objectName())
         tab.addTab(w9, w9.objectName())
+        tab.addTab(w11, w11.objectName())
+        tab.addTab(w12, w12.objectName())
 
         def temp_slot(i):
             change_pixelmap()

@@ -34,7 +34,8 @@ class PP:
                            "brightness": self.func1, "saturation": self.func4,
                            "warmth": self.func5, "fade": self.func6,
                            "highlight": self.func7, "shadow": self.func8,
-                           "zoom": self.func9
+                           "zoom": self.func9, "sharpen": self.func11,
+                           "tilt": self.func12
                            }
 
     def read_img(self, filepath):
@@ -125,9 +126,7 @@ class PP:
 
     def func6(self, factor=0, gray=0):
         factor = 1 - (factor / 10)
-        fade = np.zeros_like(self.orig_img)
-        fade[:, :] = (gray, gray, gray)
-        self.img = ((self.orig_img * factor) + (fade * (1 - factor))).astype('uint8')
+        self.img = func.add_weighted(self.orig_img, gray, factor)
         return True
 
     def func7(self, highlight=0, pixel=128):
@@ -168,3 +167,18 @@ class PP:
         logging.debug(f'specific point: {specific_point}')
         self.img = func.rotate(self.orig_img, 0, specific_point, scale)
         return True
+
+    def func11(self, step=10, to_sharpen=True):
+        self.img = self.orig_img
+        if to_sharpen:
+            step /= 10
+            sharpened_img = func.apply_kernel(self.orig_img, func.sharpen)
+            self.img = func.add_weighted(sharpened_img, self.orig_img, step)
+        return True
+
+    def func12(self, linear=10):
+        linear /= 10
+        blurred_img = func.apply_kernel(self.orig_img, func.blur)
+        self.img = func.add_weighted(blurred_img, self.orig_img, linear)
+        return True
+
