@@ -139,6 +139,15 @@ class ReadTabW:
         sl3.setSingleStep(1)
         w9 = MyWidget(sl1, sl2, sl3, name="zoom", slot=slot)
 
+        #Vignette
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("vig")
+        sl1.setValue(0)
+        sl1.setMinimum(0)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+        w10 = MyWidget(sl1, name="vignatte", slot=slot)
+
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
         tab.addTab(w3, w3.objectName())
@@ -148,6 +157,7 @@ class ReadTabW:
         tab.addTab(w7, w7.objectName())
         tab.addTab(w8, w8.objectName())
         tab.addTab(w9, w9.objectName())
+        tab.addTab(w10, w10.objectName())
 
         def temp_slot(i):
             change_pixelmap()

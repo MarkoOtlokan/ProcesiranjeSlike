@@ -7,6 +7,7 @@ from itertools import cycle
 import logging
 from math import tan, sin, cos, pi
 from scipy.interpolate import UnivariateSpline
+import math
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
 
@@ -34,7 +35,7 @@ class PP:
                            "brightness": self.func1, "saturation": self.func4,
                            "warmth": self.func5, "fade": self.func6,
                            "highlight": self.func7, "shadow": self.func8,
-                           "zoom": self.func9
+                           "zoom": self.func9, "vignatte": self.func10,
                            }
 
     def read_img(self, filepath):
@@ -167,4 +168,46 @@ class PP:
         specific_point = np.rint([y*y_max/100, x*x_max/100])
         logging.debug(f'specific point: {specific_point}')
         self.img = func.rotate(self.orig_img, 0, specific_point, scale)
+        return True
+
+    def func10(self, vig=0):#RADI ALI JE SPORO
+        newImage = self.orig_img.copy()
+        h = len(newImage)
+        w = len(newImage[0])
+        h2 = h/2
+        w2 = w/2
+
+        for i in range (0, h):
+            for j in range (0, w):
+                piksel = []
+                piksel = newImage[i][j]
+                #vrednost = ((abs(h2 - i) + abs(w2 - j)) * vig) / 100
+                vrednost = (math.sqrt(pow((h2-i),2) + pow((w2 - j),2)) * vig)/100
+                for x in range(0,3):
+                    piksel[x] = max(piksel[x] - vrednost, 0)
+                #newImage[i][j] = piksel
+
+        self.img = newImage
+        return True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         return True
