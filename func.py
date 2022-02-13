@@ -52,13 +52,12 @@ def hsv_to_bgr_vectorized(img):  # return img with BGR format
     return np.rint(out).astype(np.uint8)
 
 
-def rotate(img, angle, scale=1.0):
+def rotate(img, angle, point, scale=1.0):
     angle = angle * np.pi / 180
-    specific_point = np.array(img.shape[:2][::-1])/2
     warp_mat = np.zeros((2,3))
     a, b = np.cos(angle) * scale, np.sin(angle) * scale
     warp_mat[:2,:2] = [[a, -b],[b, a]]
-    warp_mat[:2,2] = specific_point - np.matmul(warp_mat[:2,:2], specific_point)
+    warp_mat[:2,2] = point - np.matmul(warp_mat[:2,:2], point)
     return warpAffine(img, warp_mat)
 
 

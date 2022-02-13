@@ -82,12 +82,72 @@ class ReadTabW:
         sl2.setSingleStep(1)
         w6 = MyWidget(sl1, sl2, name="fade", slot=slot)
 
+        # Highlights
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("highlight")
+        sl1.setValue(0)
+        sl1.setMinimum(-100)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+
+        # sl2 = QSlider(Qt.Horizontal)
+        # sl2.setObjectName("pixel")
+        # sl2.setValue(128)
+        # sl2.setMinimum(128)
+        # sl2.setMaximum(180)
+        # sl2.setSingleStep(1)
+        #w7 = MyWidget(sl1, sl2, name="highlight", slot=slot)
+        w7 = MyWidget(sl1, name="highlight", slot=slot)
+
+        #shadow
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("shadow")
+        sl1.setValue(0)
+        sl1.setMinimum(-100)
+        sl1.setMaximum(100)
+        sl1.setSingleStep(1)
+
+        # sl2 = QSlider(Qt.Horizontal)
+        # sl2.setObjectName("pixel")
+        # sl2.setValue(127)
+        # sl2.setMinimum(50)
+        # sl2.setMaximum(128)
+        # sl2.setSingleStep(1)
+        #w8 = MyWidget(sl1, sl2, name="shadow", slot=slot)
+        w8 = MyWidget(sl1, name="shadow", slot=slot)
+
+        # Scale
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("scale")
+        sl1.setMinimum(-10)
+        sl1.setMaximum(-1)
+        sl1.setValue(-10)
+        sl1.setSingleStep(1)
+
+        sl2 = QSlider(Qt.Horizontal)
+        sl2.setObjectName("x")
+        sl2.setValue(50)
+        sl2.setMinimum(0)
+        sl2.setMaximum(100)
+        sl2.setSingleStep(1)
+
+        sl3 = QSlider(Qt.Horizontal)
+        sl3.setObjectName("y")
+        sl3.setValue(50)
+        sl3.setMinimum(0)
+        sl3.setMaximum(100)
+        sl3.setSingleStep(1)
+        w9 = MyWidget(sl1, sl2, sl3, name="zoom", slot=slot)
+
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
         tab.addTab(w3, w3.objectName())
         tab.addTab(w4, w4.objectName())
         tab.addTab(w5, w5.objectName())
         tab.addTab(w6, w6.objectName())
+        tab.addTab(w7, w7.objectName())
+        tab.addTab(w8, w8.objectName())
+        tab.addTab(w9, w9.objectName())
 
         def temp_slot(i):
             change_pixelmap()
