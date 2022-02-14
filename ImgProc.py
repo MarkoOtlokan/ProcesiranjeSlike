@@ -35,7 +35,7 @@ class PP:
                            "warmth": self.func5, "fade": self.func6,
                            "highlight": self.func7, "shadow": self.func8,
                            "zoom": self.func9, "sharpen": self.func11,
-                           "tilt": self.func12
+                           "tilt": self.func12, "vignette": self.func10
                            }
 
     def read_img(self, filepath):
@@ -164,8 +164,17 @@ class PP:
         shape = self.orig_img.shape[:2][::-1]
         y_max, x_max = shape
         specific_point = np.rint([y*y_max/100, x*x_max/100])
+        logging.debug(f'shape point: {y_max, x_max}')
         logging.debug(f'specific point: {specific_point}')
         self.img = func.rotate(self.orig_img, 0, specific_point, scale)
+        return True
+
+    def func10(self, move_h, move_v, size):
+        size /= 10
+        move_h /= 10
+        move_v /= 10
+        mask = func.radial_mask(self.orig_img.shape[:2], (move_h, move_v), size)
+        self.img = np.rint(self.orig_img * mask).astype(np.uint8)
         return True
 
     def func11(self, step=10, to_sharpen=True):
@@ -176,9 +185,12 @@ class PP:
             self.img = func.add_weighted(sharpened_img, self.orig_img, step)
         return True
 
-    def func12(self, linear=10):
-        linear /= 10
+    def func12(self, size=10, move=0, horizontal=True):
+        size /= 10
+        move /= 10
         blurred_img = func.apply_kernel(self.orig_img, func.blur)
-        self.img = func.add_weighted(blurred_img, self.orig_img, linear)
+        #self.img = func.add_weighted(blurred_img, self.orig_img, linear)
+        mask = func.linear_mask(self.orig_img.shape[:2], move, size, horizontal)
+        self.img = np.rint(self.orig_img * mask + blurred_img * (1 - mask)).astype(np.uint8)#np.rint(self.orig_img * mask).astype(np.uint8)
         return True
 

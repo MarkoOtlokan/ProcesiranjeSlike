@@ -7,7 +7,7 @@ sharpen = np.array([[0, -1, 0],
                     [0, -1, 0]])
 
 blur = np.array([[0.0625, 0.125, 0.0625],
-                 [0.125 , 0.25 , 0.125 ],
+                 [0.125, 0.25, 0.125],
                  [0.0625, 0.125, 0.0625]])
 
 
@@ -15,6 +15,60 @@ blur = np.array([[0.0625, 0.125, 0.0625],
 
 def add_weighted(img, img2, factor):
     return ((img * factor) + (img2 * (1 - factor))).astype('uint8')
+
+
+def radial_mask(shape, move, size):  # return in range 0-1
+    # size in range (0, 1)
+    h, w = shape
+    size = (1.2 - 0.5) * size + 0.5
+    move_h, move_v = move
+    move_h = 2 * move_h - 1
+    move_v = 2 * move_v - 1
+    Y = np.linspace(-1+move_h, 1+move_h, w)[None, :]
+    X = np.linspace(-1+move_v, 1+move_v, h)[:, None]
+    alpha = np.power(X ** 2 + Y ** 2, size)
+    alpha = 1 - alpha / alpha.max()
+    return alpha[..., None] * np.array([1, 1, 1])
+
+
+def lin_grad(n, center=0.5, size_white=0.1, transition=0.1):
+    arr = np.zeros(n)
+    center_i = round(center * n)
+    len_white = round(size_white * n)
+    start_white_i = center_i - len_white // 2
+    end_white_i = center_i + len_white // 2
+
+    len_t = round(transition * n / 2)
+    trans = np.linspace(0, 1, len_t)
+    start_t_i = start_white_i - len_t
+    end_t_i = end_white_i + len_t
+
+    indexes = np.array([start_t_i, start_white_i, end_white_i, end_t_i])
+    # indexes = np.clip(indexes, 0, n - 1)
+
+    logging.debug(f'indexes : {indexes}')
+    arr[indexes[1]:indexes[2]] = 1
+    arr[indexes[0]:indexes[1]] = trans
+    arr[indexes[2]:indexes[3]] = trans[::-1]
+
+    return arr
+
+
+def linear_mask(shape, move, size, horizontal=True):  # return in range 0-1
+    # size in range (0, 1)
+    # move in range (0, 1)
+    h, w = shape
+    size = (0.2 - 0.05) * size + 0.05
+    move = (0.85 - 0.15) * move + 0.15
+    if horizontal:
+        h, w = w, h
+    X = lin_grad(w, move, size)
+    X = np.tile(X, (h, 1))
+    #alpha = 1 - alpha # / alpha.max()
+    if horizontal:
+        X = X.T
+    return X[..., None] * np.array([1, 1, 1])
+
 
 def rgb_to_hsv_vectorized(img):  # input img with BGR format
     maxc = img.max(-1)
@@ -104,7 +158,7 @@ def warpAffine(I, M):
 def apply_kernel(img, kernel):
     k = len(kernel)
     p = k // 2
-    padded = np.pad(img.copy(), ((p, p), (p, p), (0, 0)), "symmetric").astype(np.int16) # zbog negativnih mora signed
+    padded = np.pad(img.copy(), ((p, p), (p, p), (0, 0)), "symmetric").astype(np.int16)  # zbog negativnih mora signed
     img_x, img_y = padded.shape[:2]
 
     padded[p:-p, p:-p, :] = np.add.reduce([padded[x:(img_x - (k - x - 1)), y:(img_y - (k - y - 1)), :] * kernel[x, y]

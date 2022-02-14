@@ -139,6 +139,29 @@ class ReadTabW:
         sl3.setSingleStep(1)
         w9 = MyWidget(sl1, sl2, sl3, name="zoom", slot=slot)
 
+        # Vignette
+        sl1 = QSlider(Qt.Horizontal)
+        sl1.setObjectName("size")
+        sl1.setMinimum(0)
+        sl1.setMaximum(10)
+        sl1.setValue(0)
+        sl1.setSingleStep(1)
+
+        sl2 = QSlider(Qt.Horizontal)
+        sl2.setObjectName("move_h")
+        sl2.setMinimum(0)
+        sl2.setMaximum(10)
+        sl2.setValue(5)
+        sl2.setSingleStep(1)
+
+        sl3 = QSlider(Qt.Horizontal)
+        sl3.setObjectName("move_v")
+        sl3.setMinimum(0)
+        sl3.setMaximum(10)
+        sl3.setValue(5)
+        sl3.setSingleStep(1)
+
+        w10 = MyWidget(sl1, sl2, sl3, name="vignette", slot=slot)
         # Sharpen
         cbox1 = QCheckBox()
         cbox1.setObjectName("to_sharpen")
@@ -154,13 +177,24 @@ class ReadTabW:
 
         # Tilt shift
         sl1 = QSlider(Qt.Horizontal)
-        sl1.setObjectName("linear")
+        sl1.setObjectName("size")
         sl1.setMinimum(0)
         sl1.setMaximum(10)
-        sl1.setValue(0)
+        sl1.setValue(5)
         sl1.setSingleStep(1)
 
-        w12 = MyWidget(sl1, name="tilt", slot=slot)
+        sl2 = QSlider(Qt.Horizontal)
+        sl2.setObjectName("move")
+        sl2.setMinimum(0)
+        sl2.setMaximum(10)
+        sl2.setValue(5)
+        sl2.setSingleStep(1)
+
+        cbox1 = QCheckBox()
+        cbox1.setObjectName("horizontal")
+        cbox1.setChecked(False)
+
+        w12 = MyWidget(sl1, sl2, cbox1, name="tilt", slot=slot)
 
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
@@ -171,6 +205,7 @@ class ReadTabW:
         tab.addTab(w7, w7.objectName())
         tab.addTab(w8, w8.objectName())
         tab.addTab(w9, w9.objectName())
+        tab.addTab(w10, w10.objectName())
         tab.addTab(w11, w11.objectName())
         tab.addTab(w12, w12.objectName())
 
