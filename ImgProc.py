@@ -30,6 +30,7 @@ class PP:
     def __init__(self):
         self.img = None
         self.orig_img = None
+        self.blurred = None
         self.name2Trans = {"contrast": self.func2, "rotation": self.func3,
                            "brightness": self.func1, "saturation": self.func4,
                            "warmth": self.func5, "fade": self.func6,
@@ -63,7 +64,7 @@ class PP:
         return True
 
     def func2(self, p=0):
-        self.func4(round(p * (-1) * 2.55))
+        #self.func4(round(p * (-1) * 2.55))
         p = p / 100
         p += 1
 
@@ -81,7 +82,7 @@ class PP:
         logging.debug(f"lut table: {contrast}\n")
         #self.img = np.vectorize(dict(enumerate(contrast)).get)(self.img)
         #self.img = np.take(contrast, self.img)
-        self.img = contrast[self.img]
+        self.img = contrast[self.orig_img]#self.img]
         #lut = np.dstack((contrast, contrast, contrast))
         #self.img = apply_lut(self.img, lut)
         return True

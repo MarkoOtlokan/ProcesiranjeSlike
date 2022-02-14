@@ -113,12 +113,12 @@ class MyWindow(QMainWindow):
         self.label.setPixmap(pixmap)
 
     def save_image(self):
-        if self.pp.img is None:
+        if self.pp.orig_img is None:
             return
         image_path, ext = QFileDialog.getSaveFileName(filter="JPG(*.jpg);;PNG(*.png)")
         if image_path:
             image_path = image_path + ext[-5:-1]
-            cv2.imwrite(image_path, self.pp.img)
+            cv2.imwrite(image_path, self.pp.orig_img)
             logging.debug(f'Image saved as: {image_path}')
 
     def changeEvent(self, event):

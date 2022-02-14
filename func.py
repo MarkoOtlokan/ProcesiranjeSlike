@@ -93,8 +93,10 @@ def rgb_to_hsv_vectorized(img):  # input img with BGR format
     cond1 = divs[..., 0] - divs[..., 1]
     cond2 = 2.0 + divs[..., 2] - divs[..., 0]
     h = 4.0 + divs[..., 1] - divs[..., 2]
-    h[img[..., 2] == maxc] = cond1[img[..., 2] == maxc]
-    h[img[..., 1] == maxc] = cond2[img[..., 1] == maxc]
+    mask2 = img[..., 2] == maxc
+    mask1 = img[..., 1] == maxc
+    h[mask2] = cond1[mask2]
+    h[mask1] = cond2[mask1]
     out[:, :, 0] = ((h / 6.0) % 1.0) * 180
 
     out[minc == maxc, :2] = 0
