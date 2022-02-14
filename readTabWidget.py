@@ -44,7 +44,7 @@ class ReadTabW:
         sl2.setObjectName("scale")
         sl2.setValue(10)
         sl2.setMinimum(5)
-        sl2.setMaximum(20)
+        sl2.setMaximum(10)
         sl2.setSingleStep(1)
         w3 = MyWidget(sl1, sl2, name="rotation", slot=slot)
 
@@ -213,6 +213,7 @@ class ReadTabW:
             change_pixelmap()
             tab.widget(i).give_slot()
 
-        tab.currentChanged.connect(temp_slot)
+
+        tab.currentChanged.connect(slot)#temp_slot)
 
         return tab

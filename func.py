@@ -175,7 +175,7 @@ def warpAffine(I, M):
 def apply_kernel(img, kernel):
     k = len(kernel)
     p = k // 2
-    padded = np.pad(img.copy(), ((p, p), (p, p), (0, 0)), "symmetric").astype(np.int16)  # zbog negativnih mora signed
+    padded = np.pad(img.copy(), ((p, p), (p, p), (0, 0)), "symmetric").astype(np.float32)  # zbog negativnih mora signed
     img_x, img_y = padded.shape[:2]
 
     padded[p:-p, p:-p, :] = np.add.reduce([padded[x:(img_x - (k - x - 1)), y:(img_y - (k - y - 1)), :] * kernel[x, y]

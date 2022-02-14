@@ -14,11 +14,11 @@ class MyWidget(QWidget):
     def init_el(self, el):
         for e in el:
             if isinstance(e, QSlider):
-                e.valueChanged.connect(self.give_slot)
+                e.valueChanged.connect(self.slot)
             elif isinstance(e, QCheckBox):
-                e.stateChanged.connect(self.give_slot)
+                e.stateChanged.connect(self.slot)
             elif isinstance(e, QPushButton):
-                e.clicked.connect(self.give_slot)
+                e.clicked.connect(self.slot)
             else:
                 raise Exception("MyWidget class got unexpected element!!")
             e.setParent(self)
@@ -35,11 +35,6 @@ class MyWidget(QWidget):
             elif isinstance(e, QCheckBox):
                 d[e.objectName()] = e.isChecked()
         return d
-
-    # def reset_gadgets(self):
-    #     for e in self.children():
-    #         if isinstance(e, QSlider):
-    #             e.setValue(0)
 
 
 
