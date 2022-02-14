@@ -88,24 +88,15 @@ class PP:
 
     def func3(self, angle=0, scale=1.0):
         scale /= 10
-        center_point = np.array(self.orig_img.shape[:2][::-1]) / 2
+        center_point = np.array(self.orig_img.shape[:2]) / 2
         logging.debug(f'specific point: {center_point}')
         self.img = func.rotate(self.orig_img, angle, center_point, scale)
         return True
 
     def saturation_helper(self, org_img, sat):
-        def non_overflowing_sum(a, b):
-            c = np.int16(a) + b
-            c[np.where(c > 255)] = 255
-            c[np.where(c < 0)] = 0
-            return np.uint8(c)
-
         hsv = func.rgb_to_hsv_vectorized(org_img)
-        h, s, v = np.transpose(hsv, (2, 0, 1))
-        s = non_overflowing_sum(s, sat)
-
-        final_hsv = np.dstack((h, s, v))
-        self.img = func.hsv_to_bgr_vectorized(final_hsv)
+        hsv[..., 1] = np.clip(hsv[..., 1] + [sat], 0, 255).astype(np.uint8)
+        self.img = func.hsv_to_bgr_vectorized(hsv)
 
     def func4(self, sat):
         self.saturation_helper(self.orig_img, sat)
@@ -121,7 +112,7 @@ class PP:
         self.img = apply_lut(self.orig_img, lut)
 
         sat_const = warm * 50
-        self.saturation_helper(self.img, sat_const)
+        #self.saturation_helper(self.img, sat_const) # satu too slow and warmth good without it
         return True
 
     def func6(self, factor=0, gray=0):
@@ -161,7 +152,7 @@ class PP:
 
     def func9(self, scale=1.0, x=0, y=0):
         scale /= -10
-        shape = self.orig_img.shape[:2][::-1]
+        shape = self.orig_img.shape[:2]
         y_max, x_max = shape
         specific_point = np.rint([y*y_max/100, x*x_max/100])
         logging.debug(f'shape point: {y_max, x_max}')

@@ -2,14 +2,25 @@ import logging
 
 import numpy as np
 
-sharpen = np.array([[0, -1, 0],
-                    [-1, 5, -1],
-                    [0, -1, 0]])
+idk = np.array([[0 , -1,  0],
+                [-1,  4, -1],
+                [0 , -1,  0]])
+
+sharpen = np.array([[0 , -1,  0],
+                    [-1,  5, -1],
+                    [0 , -1,  0]])
 
 blur = np.array([[0.0625, 0.125, 0.0625],
-                 [0.125, 0.25, 0.125],
+                 [0.125 , 0.25 , 0.125 ],
                  [0.0625, 0.125, 0.0625]])
 
+bilinear = np.array([[0   , 0.25,    0],
+                     [0.25, 1   , 0.25],
+                     [0   , 0.25, 0   ]])
+
+bilinear2 = np.array([[0.25  , 0.5, 0.25],
+                     [0.5    , 1  , 0.5 ],
+                     [0.25   , 0.5, 0.25]])
 
 # sharpen3d = np.dstack((sharpen, sharpen, sharpen))
 
@@ -124,7 +135,11 @@ def rotate(img, angle, point, scale=1.0):
     angle = angle * np.pi / 180
     warp_mat = np.zeros((2, 3))
     a, b = np.cos(angle) * scale, np.sin(angle) * scale
-    warp_mat[:2, :2] = [[a, -b], [b, a]]
+    warp_mat[:2, :2] = [[a, b], [-b, a]]
+    logging.debug(f'warp_mat: {warp_mat}')
+    logging.debug(f'point: {point}')
+    logging.debug(f'mat mult: {np.matmul(point, warp_mat[:2, :2])}')
+    logging.debug(f'mat mult2: {np.matmul(warp_mat[:2, :2], point)}')
     warp_mat[:2, 2] = point - np.matmul(warp_mat[:2, :2], point)
     return warpAffine(img, warp_mat)
 

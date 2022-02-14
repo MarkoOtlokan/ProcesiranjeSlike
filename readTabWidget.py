@@ -192,7 +192,7 @@ class ReadTabW:
 
         cbox1 = QCheckBox()
         cbox1.setObjectName("horizontal")
-        cbox1.setChecked(False)
+        cbox1.setChecked(True)
 
         w12 = MyWidget(sl1, sl2, cbox1, name="tilt", slot=slot)
 
