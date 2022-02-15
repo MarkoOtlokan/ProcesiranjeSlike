@@ -31,6 +31,7 @@ class PP:
         self.img = None
         self.orig_img = None
         self.blurred = None
+        self.sharpen = None
         self.name2Trans = {"contrast": self.func2, "rotation": self.func3,
                            "brightness": self.func1, "saturation": self.func4,
                            "warmth": self.func5, "fade": self.func6,
@@ -41,7 +42,7 @@ class PP:
 
     def read_img(self, filepath):
         self.img = cv2.imread(filepath)
-        self.orig_img = self.img
+        self.change_orig()
 
     # Ako transform vraca None ako se funkcija ne moze odraditi
     # u suprotnom vraca modifikovanu sliku.
@@ -56,6 +57,8 @@ class PP:
 
     def change_orig(self):
         self.orig_img = self.img
+        self.blurred = None
+        self.sharpen = None
         logging.debug(f"org image changed\n")
 
     def func1(self, add_brightness=0):
@@ -173,16 +176,18 @@ class PP:
         self.img = self.orig_img
         if to_sharpen:
             step /= 10
-            sharpened_img = func.apply_kernel(self.orig_img, func.sharpen)
-            self.img = func.add_weighted(sharpened_img, self.orig_img, step)
+            if self.sharpen is None:
+                self.sharpen = func.apply_kernel(self.orig_img, func.sharpen)
+            self.img = func.add_weighted(self.sharpen, self.orig_img, step)
         return True
 
     def func12(self, size=10, move=0, horizontal=True):
         size /= 10
         move /= 10
-        blurred_img = func.apply_kernel(self.orig_img, func.blur)
+        if self.blurred is None:
+            self.blurred = func.apply_kernel(self.orig_img, func.blur2)
         #self.img = func.add_weighted(blurred_img, self.orig_img, linear)
         mask = func.linear_mask(self.orig_img.shape[:2], move, size, horizontal)
-        self.img = np.rint(self.orig_img * mask + blurred_img * (1 - mask)).astype(np.uint8)#np.rint(self.orig_img * mask).astype(np.uint8)
+        self.img = np.rint(self.orig_img * mask + self.blurred * (1 - mask)).astype(np.uint8)#np.rint(self.orig_img * mask).astype(np.uint8)
         return True
 
