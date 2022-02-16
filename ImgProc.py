@@ -3,9 +3,7 @@ import time
 import cv2
 import numpy as np
 import func
-from itertools import cycle
 import logging
-from math import tan, sin, cos, pi
 from scipy.interpolate import UnivariateSpline
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
@@ -67,7 +65,6 @@ class PP:
         return True
 
     def func2(self, p=0):
-        #self.func4(round(p * (-1) * 2.55))
         p = p / 100
         p += 1
 
@@ -83,20 +80,13 @@ class PP:
 
         contrast = np.array([help(i) for i in range(0, 256)]).clip(0, 255).astype('uint8')
         logging.debug(f"lut table: {contrast}\n")
-        #self.img = np.vectorize(dict(enumerate(contrast)).get)(self.img)
-        #self.img = np.take(contrast, self.img)
-        self.img = contrast[self.orig_img]#self.img]
-        #lut = np.dstack((contrast, contrast, contrast))
-        #self.img = apply_lut(self.img, lut)
+        self.img = contrast[self.orig_img]
         return True
 
-    def func3(self, angle=0, bilinear=True):
+    def func3(self, angle, interpolation):
         center_point = np.array(self.orig_img.shape[:2]) / 2
         logging.debug(f'specific point: {center_point}')
         warp_mat = func.getRotationMatrix2D(center_point, angle, 1.0)
-        interpolation = "1nn"
-        if bilinear:
-            interpolation = 'bilinear'
         self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
         return True
 
@@ -117,9 +107,6 @@ class PP:
 
         lut = np.dstack((decr, identity, incr))
         self.img = apply_lut(self.orig_img, lut)
-
-        sat_const = warm * 50
-        #self.saturation_helper(self.img, sat_const) # satu too slow and warmth good without it
         return True
 
     def func6(self, factor=0, gray=0):
@@ -157,23 +144,13 @@ class PP:
         self.img = shadowValue[self.orig_img]
         return True
 
-    def func9(self, scale=1.0, x=0, y=0, bilinear=True):
+    def func9(self, scale, x, y, interpolation):
         scale /= -10
         shape = self.orig_img.shape[:2]
         y_max, x_max = shape
         center_point = np.rint([y * y_max / 100, x * x_max / 100])
         warp_mat = func.getRotationMatrix2D(center_point, 0, scale)
-        interpolation = "1nn"
-        if bilinear:
-            interpolation = 'bilinear'
         self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
-
-        # shape = self.orig_img.shape[:2]
-        # y_max, x_max = shape
-        # specific_point = np.rint([y*y_max/100, x*x_max/100])
-        # logging.debug(f'shape point: {y_max, x_max}')
-        # logging.debug(f'specific point: {specific_point}')
-        # self.img = func.rotate(self.orig_img, 0, specific_point, scale)
         return True
 
     def func10(self, move_h, move_v, size):
@@ -184,22 +161,19 @@ class PP:
         self.img = np.rint(self.orig_img * mask).astype(np.uint8)
         return True
 
-    def func11(self, step=10, to_sharpen=True):
+    def func11(self, step):
         self.img = self.orig_img
-        if to_sharpen:
-            step /= 10
-            if self.sharpen is None:
-                self.sharpen = func.apply_kernel(self.orig_img, func.sharpen2)
-            self.img = func.add_weighted(self.sharpen, self.orig_img, step)
+        step /= 10
+        if self.sharpen is None:
+            self.sharpen = func.apply_kernel(self.orig_img, func.sharpen3)
+        self.img = func.add_weighted(self.sharpen, self.orig_img, step)
         return True
 
     def func12(self, size=10, move=0, horizontal=True):
         size /= 10
         move /= 10
         if self.blurred is None:
-            self.blurred = func.apply_kernel(self.orig_img, func.blur2)
-        #self.img = func.add_weighted(blurred_img, self.orig_img, linear)
+            self.blurred = func.apply_kernel(self.orig_img, func.blur3)
         mask = func.linear_mask(self.orig_img.shape[:2], move, size, horizontal)
-        self.img = np.rint(self.orig_img * mask + self.blurred * (1 - mask)).astype(np.uint8)#np.rint(self.orig_img * mask).astype(np.uint8)
+        self.img = np.rint(self.orig_img * mask + self.blurred * (1 - mask)).astype(np.uint8)
         return True
-

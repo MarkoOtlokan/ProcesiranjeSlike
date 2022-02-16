@@ -14,6 +14,12 @@ sharpen2 = np.array([[-1, -1, -1],
                      [-1, 9, -1],
                      [-1, -1, -1]])
 
+sharpen3 = np.array([[1,  4,    6,  4, 1],
+                     [4, 16,   24, 16, 4],
+                     [6, 24, -476, 24, 6],
+                     [4, 16,   24, 16, 4],
+                     [1,  4,    6,  4, 1]]) * (-1/256)
+
 blur = np.array([[0.0625, 0.125, 0.0625],
                  [0.125, 0.25, 0.125],
                  [0.0625, 0.125, 0.0625]])
@@ -22,13 +28,20 @@ blur2 = (1 / 9) * np.array([[1, 1, 1],
                             [1, 1, 1],
                             [1, 1, 1]])
 
+blur3 = np.array([[1,  4,  6,  4, 1],
+                  [4, 16, 24, 16, 4],
+                  [6, 24, 36, 24, 6],
+                  [4, 16, 24, 16, 4],
+                  [1,  4,  6,  4, 1]]) * (1/256)
+
 
 def add_weighted(img, img2, factor):
     return ((img * factor) + (img2 * (1 - factor))).astype('uint8')
 
 
-def radial_mask(shape, move, size):  # return in range 0-1
-    # size in range (0, 1)
+def radial_mask(shape, move, size):
+    # return in range 0-1
+    # size, move in range (0, 1)
     h, w = shape
     size = (1.2 - 0.5) * size + 0.5
     move_h, move_v = move
@@ -54,7 +67,6 @@ def lin_grad(n, center=0.5, size_white=0.1, transition=0.1):
     end_t_i = end_white_i + len_t
 
     indexes = np.array([start_t_i, start_white_i, end_white_i, end_t_i])
-    # indexes = np.clip(indexes, 0, n - 1)
 
     logging.debug(f'indexes : {indexes}')
     arr[indexes[1]:indexes[2]] = 1
@@ -80,7 +92,8 @@ def linear_mask(shape, move, size, horizontal=True):  # return in range 0-1
     return X[..., None] * np.array([1, 1, 1])
 
 
-def rgb_to_hsv_vectorized(img):  # input img with BGR format
+def rgb_to_hsv_vectorized(img):
+    # input img with BGR format
     maxc = img.max(-1)
     minc = img.min(-1)
 
@@ -102,7 +115,8 @@ def rgb_to_hsv_vectorized(img):  # input img with BGR format
     return np.rint(out).astype(np.uint8)
 
 
-def hsv_to_bgr_vectorized(img):  # return img with BGR format
+def hsv_to_bgr_vectorized(img):
+    # return img with BGR format
     c = ((img[..., 2] / 255) * (img[..., 1] / 255))
     h_sec = img[..., 0] / 30
     x = c * (1 - np.abs(np.fmod(h_sec, 2) - 1))
@@ -133,7 +147,6 @@ def hsv_to_bgr_vectorized(img):  # return img with BGR format
 
 
 def getRotationMatrix2D(center, angle, scale):
-    cX, cY = center
     angle = angle * np.pi / 180
     warp_mat = np.zeros((2, 3))
     a = np.cos(angle) * scale
@@ -162,8 +175,10 @@ def warpAffine(I, M, interpolation='bilinear'):
     New_pixels = None
     if interpolation == "bilinear":
         New_pixels = bilinear_interpolation(Inew_index_x, Inew_index_y, I)
-    else:
+    elif interpolation == '1 near neighbor':
         New_pixels = I[Inew_index_x.astype(np.uint16), Inew_index_y.astype(np.uint16)]
+    else:
+        raise Exception("Not correctly chosen interpolation method!")
     img[Xi, Yi] = New_pixels
     return img.astype(np.uint8)
 
@@ -192,7 +207,7 @@ def bilinear_interpolation(idx1, idx2, img):
 def apply_kernel(img, kernel):
     k = len(kernel)
     p = k // 2
-    padded = np.pad(img.copy(), ((p, p), (p, p), (0, 0)), "symmetric").astype(np.float32)  # zbog negativnih mora signed
+    padded = np.pad(img.copy(), ((p, p), (p, p), (0, 0)), "symmetric").astype(np.float32)  # zbog negativnih kernela mora signed
     img_x, img_y = padded.shape[:2]
 
     padded[p:-p, p:-p, :] = np.add.reduce([padded[x:(img_x - (k - x - 1)), y:(img_y - (k - y - 1)), :] * kernel[x, y]

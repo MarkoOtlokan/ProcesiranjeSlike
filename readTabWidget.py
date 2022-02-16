@@ -1,16 +1,16 @@
+from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QVBoxLayout, QHBoxLayout, QWidget, QTabWidget, \
-    QSlider, QPushButton, QCheckBox
+    QSlider, QPushButton, QCheckBox, QLabel, QComboBox
 from PyQt5.QtCore import Qt
 
 from WidgetHelper import MyWidget
 
-# test....
+
 class ReadTabW:
-    def getTab(slot, change_pixelmap, change_orig):
+    def getTab(slot):
         tab = QTabWidget()
 
-        #for ... read in all widgets from file
-        #just example
+        # BRIGHTNESS
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("add_brightness")
         sl1.setValue(0)
@@ -18,19 +18,16 @@ class ReadTabW:
         sl1.setMaximum(255)
         sl1.setSingleStep(10)
 
-        w = MyWidget(sl1, name="brightness", slot=slot)### VAZNO!!! MyWidget name mora odgovarati
-                                                       ### nazivu funkcije u mapping-u ImgProc.PP klasi.
-                                                       ### Takodje gadgeti unutar (ovog gore)
-                                                       ### moraju imati imena = parametrima
-                                                       ### funkcije cije ime deli (taj unutar kojeg se nalaze) Mywidget!
+        w = MyWidget((sl1,), name="brightness", slot=slot)
 
+        # CONTRAST
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("p")
         sl1.setValue(0)
         sl1.setMinimum(-100)
         sl1.setMaximum(100)
         sl1.setSingleStep(1)
-        w2 = MyWidget(sl1, name="contrast", slot=slot)
+        w2 = MyWidget((sl1,), name="contrast", slot=slot)
 
         # ROTATION
         sl1 = QSlider(Qt.Horizontal)
@@ -40,10 +37,13 @@ class ReadTabW:
         sl1.setValue(0)
         sl1.setSingleStep(1)
 
-        cbox1 = QCheckBox()
-        cbox1.setObjectName("bilinear")
-        cbox1.setChecked(True)
-        w3 = MyWidget(sl1, cbox1, name="rotation", slot=slot)
+        combo1 = QComboBox()
+        combo1.setObjectName("interpolation")
+        combo1.addItem('bilinear', None)
+        combo1.addItem('1 near neighbor', None)
+        combo1.setCurrentIndex(0)
+
+        w3 = MyWidget((sl1, combo1), name="rotation", slot=slot)
 
         # saturation
         sl1 = QSlider(Qt.Horizontal)
@@ -52,7 +52,7 @@ class ReadTabW:
         sl1.setMinimum(-255)
         sl1.setMaximum(255)
         sl1.setSingleStep(5)
-        w4 = MyWidget(sl1, name="saturation", slot=slot)
+        w4 = MyWidget((sl1,), name="saturation", slot=slot)
 
         # warmth
         sl1 = QSlider(Qt.Horizontal)
@@ -61,7 +61,7 @@ class ReadTabW:
         sl1.setMinimum(0)
         sl1.setMaximum(10)
         sl1.setSingleStep(1)
-        w5 = MyWidget(sl1, name="warmth", slot=slot)
+        w5 = MyWidget((sl1,), name="warmth", slot=slot)
 
         # fade
         sl1 = QSlider(Qt.Horizontal)
@@ -77,7 +77,7 @@ class ReadTabW:
         sl2.setMinimum(0)
         sl2.setMaximum(255)
         sl2.setSingleStep(1)
-        w6 = MyWidget(sl1, sl2, name="fade", slot=slot)
+        w6 = MyWidget((sl1, sl2), name="fade", slot=slot)
 
         # Highlights
         sl1 = QSlider(Qt.Horizontal)
@@ -87,16 +87,9 @@ class ReadTabW:
         sl1.setMaximum(100)
         sl1.setSingleStep(1)
 
-        # sl2 = QSlider(Qt.Horizontal)
-        # sl2.setObjectName("pixel")
-        # sl2.setValue(128)
-        # sl2.setMinimum(128)
-        # sl2.setMaximum(180)
-        # sl2.setSingleStep(1)
-        #w7 = MyWidget(sl1, sl2, name="highlight", slot=slot)
-        w7 = MyWidget(sl1, name="highlight", slot=slot)
+        w7 = MyWidget((sl1,), name="highlight", slot=slot)
 
-        #shadow
+        # shadow
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("shadow")
         sl1.setValue(0)
@@ -104,14 +97,7 @@ class ReadTabW:
         sl1.setMaximum(100)
         sl1.setSingleStep(1)
 
-        # sl2 = QSlider(Qt.Horizontal)
-        # sl2.setObjectName("pixel")
-        # sl2.setValue(127)
-        # sl2.setMinimum(50)
-        # sl2.setMaximum(128)
-        # sl2.setSingleStep(1)
-        #w8 = MyWidget(sl1, sl2, name="shadow", slot=slot)
-        w8 = MyWidget(sl1, name="shadow", slot=slot)
+        w8 = MyWidget((sl1,), name="shadow", slot=slot)
 
         # Scale
         sl1 = QSlider(Qt.Horizontal)
@@ -135,10 +121,12 @@ class ReadTabW:
         sl3.setMaximum(100)
         sl3.setSingleStep(1)
 
-        cbox1 = QCheckBox()
-        cbox1.setObjectName("bilinear")
-        cbox1.setChecked(True)
-        w9 = MyWidget(sl1, sl2, sl3, cbox1, name="zoom", slot=slot)
+        combo1 = QComboBox()
+        combo1.setObjectName("interpolation")
+        combo1.addItem('bilinear', None)
+        combo1.addItem('1 near neighbor', None)
+        combo1.setCurrentIndex(0)
+        w9 = MyWidget((sl1, sl2, sl3, combo1), name="zoom", slot=slot)
 
         # Vignette
         sl1 = QSlider(Qt.Horizontal)
@@ -162,11 +150,8 @@ class ReadTabW:
         sl3.setValue(5)
         sl3.setSingleStep(1)
 
-        w10 = MyWidget(sl1, sl2, sl3, name="vignette", slot=slot)
+        w10 = MyWidget((sl1, sl2, sl3), name="vignette", slot=slot)
         # Sharpen
-        cbox1 = QCheckBox()
-        cbox1.setObjectName("to_sharpen")
-        cbox1.setChecked(False)
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("step")
         sl1.setMinimum(0)
@@ -174,7 +159,7 @@ class ReadTabW:
         sl1.setValue(0)
         sl1.setSingleStep(1)
 
-        w11 = MyWidget(cbox1, sl1, name="sharpen", slot=slot)
+        w11 = MyWidget((sl1,), name="sharpen", slot=slot)
 
         # Tilt shift
         sl1 = QSlider(Qt.Horizontal)
@@ -195,7 +180,7 @@ class ReadTabW:
         cbox1.setObjectName("horizontal")
         cbox1.setChecked(True)
 
-        w12 = MyWidget(sl1, sl2, cbox1, name="tilt", slot=slot)
+        w12 = MyWidget((sl1, sl2, cbox1), name="tilt", slot=slot)
 
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
@@ -209,12 +194,6 @@ class ReadTabW:
         tab.addTab(w10, w10.objectName())
         tab.addTab(w11, w11.objectName())
         tab.addTab(w12, w12.objectName())
-
-        def temp_slot(i):
-            change_pixelmap()
-            tab.widget(i).give_slot()
-
-
-        tab.currentChanged.connect(slot)#temp_slot)
+        tab.currentChanged.connect(slot)
 
         return tab
