@@ -35,18 +35,15 @@ class ReadTabW:
         # ROTATION
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("angle")
-        sl1.setValue(0)
         sl1.setMinimum(-25)
         sl1.setMaximum(25)
+        sl1.setValue(0)
         sl1.setSingleStep(1)
 
-        sl2 = QSlider(Qt.Horizontal)
-        sl2.setObjectName("scale")
-        sl2.setValue(10)
-        sl2.setMinimum(5)
-        sl2.setMaximum(10)
-        sl2.setSingleStep(1)
-        w3 = MyWidget(sl1, sl2, name="rotation", slot=slot)
+        cbox1 = QCheckBox()
+        cbox1.setObjectName("bilinear")
+        cbox1.setChecked(True)
+        w3 = MyWidget(sl1, cbox1, name="rotation", slot=slot)
 
         # saturation
         sl1 = QSlider(Qt.Horizontal)
@@ -137,7 +134,11 @@ class ReadTabW:
         sl3.setMinimum(0)
         sl3.setMaximum(100)
         sl3.setSingleStep(1)
-        w9 = MyWidget(sl1, sl2, sl3, name="zoom", slot=slot)
+
+        cbox1 = QCheckBox()
+        cbox1.setObjectName("bilinear")
+        cbox1.setChecked(True)
+        w9 = MyWidget(sl1, sl2, sl3, cbox1, name="zoom", slot=slot)
 
         # Vignette
         sl1 = QSlider(Qt.Horizontal)

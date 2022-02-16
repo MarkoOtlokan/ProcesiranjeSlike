@@ -90,11 +90,14 @@ class PP:
         #self.img = apply_lut(self.img, lut)
         return True
 
-    def func3(self, angle=0, scale=1.0):
-        scale /= 10
+    def func3(self, angle=0, bilinear=True):
         center_point = np.array(self.orig_img.shape[:2]) / 2
         logging.debug(f'specific point: {center_point}')
-        self.img = func.rotate(self.orig_img, angle, center_point, scale)
+        warp_mat = func.getRotationMatrix2D(center_point, angle, 1.0)
+        interpolation = "1nn"
+        if bilinear:
+            interpolation = 'bilinear'
+        self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
         return True
 
     def saturation_helper(self, org_img, sat):
@@ -154,14 +157,23 @@ class PP:
         self.img = shadowValue[self.orig_img]
         return True
 
-    def func9(self, scale=1.0, x=0, y=0):
+    def func9(self, scale=1.0, x=0, y=0, bilinear=True):
         scale /= -10
         shape = self.orig_img.shape[:2]
         y_max, x_max = shape
-        specific_point = np.rint([y*y_max/100, x*x_max/100])
-        logging.debug(f'shape point: {y_max, x_max}')
-        logging.debug(f'specific point: {specific_point}')
-        self.img = func.rotate(self.orig_img, 0, specific_point, scale)
+        center_point = np.rint([y * y_max / 100, x * x_max / 100])
+        warp_mat = func.getRotationMatrix2D(center_point, 0, scale)
+        interpolation = "1nn"
+        if bilinear:
+            interpolation = 'bilinear'
+        self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
+
+        # shape = self.orig_img.shape[:2]
+        # y_max, x_max = shape
+        # specific_point = np.rint([y*y_max/100, x*x_max/100])
+        # logging.debug(f'shape point: {y_max, x_max}')
+        # logging.debug(f'specific point: {specific_point}')
+        # self.img = func.rotate(self.orig_img, 0, specific_point, scale)
         return True
 
     def func10(self, move_h, move_v, size):
@@ -177,7 +189,7 @@ class PP:
         if to_sharpen:
             step /= 10
             if self.sharpen is None:
-                self.sharpen = func.apply_kernel(self.orig_img, func.sharpen)
+                self.sharpen = func.apply_kernel(self.orig_img, func.sharpen2)
             self.img = func.add_weighted(self.sharpen, self.orig_img, step)
         return True
 

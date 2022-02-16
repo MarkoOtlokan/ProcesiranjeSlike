@@ -22,22 +22,6 @@ blur2 = (1 / 9) * np.array([[1, 1, 1],
                             [1, 1, 1],
                             [1, 1, 1]])
 
-bilinear = np.array([[0, 0.25, 0],
-                     [0.25, 1, 0.25],
-                     [0, 0.25, 0]])
-
-bilinear2 = np.array([[0.25, 0.5, 0.25],
-                      [0.5, 1, 0.5],
-                      [0.25, 0.5, 0.25]])
-
-
-def f(x):
-    return np.floor(x)
-
-
-def g(x):
-    return np.ceil(x)
-
 
 def add_weighted(img, img2, factor):
     return ((img * factor) + (img2 * (1 - factor))).astype('uint8')
@@ -148,101 +132,61 @@ def hsv_to_bgr_vectorized(img):  # return img with BGR format
     return np.rint(out).astype(np.uint8)
 
 
-def rotate(img, angle, point, scale=1.0):
+def getRotationMatrix2D(center, angle, scale):
+    cX, cY = center
     angle = angle * np.pi / 180
     warp_mat = np.zeros((2, 3))
-    a, b = np.cos(angle) * scale, np.sin(angle) * scale
+    a = np.cos(angle) * scale
+    b = np.sin(angle) * scale
     warp_mat[:2, :2] = [[a, b], [-b, a]]
-    logging.debug(f'warp_mat: {warp_mat}')
-    logging.debug(f'point: {point}')
-    logging.debug(f'mat mult: {np.matmul(point, warp_mat[:2, :2])}')
-    logging.debug(f'mat mult2: {np.matmul(warp_mat[:2, :2], point)}')
-    warp_mat[:2, 2] = point - np.matmul(warp_mat[:2, :2], point)
-    return warpAffine2(img, warp_mat)
+    warp_mat[:2, 2] = center - np.matmul(warp_mat[:2, :2], center)
+    return warp_mat
 
 
-def warpAffine(I, M):
-    a, b = M[..., :2].T, M[..., 2]
+def warpAffine(I, M, interpolation='bilinear'):
     x, y = I.shape[:2]
     Xi, Yi = np.mgrid[0:x, 0:y]
     Xi = Xi.ravel().astype(np.uint16)
     Yi = Yi.ravel().astype(np.uint16)
-    Iindex = np.column_stack((Xi, Yi))
-    logging.debug(f'iindex : {Iindex[:10,:]}')
-    Inew_index = np.matmul(Iindex, a) + b
-    logging.debug(f'new iindex : {Inew_index[:10,:]}')
+
+    Inew_index_x, Inew_index_y = M[0, 0] * Xi + M[0, 1] * Yi + M[0, 2], M[1, 0] * Xi + M[1, 1] * Yi + M[1, 2]
+
     img = np.zeros(I.shape)
 
-    l1 = Inew_index[..., 0]
-    l2 = Inew_index[..., 1]
-    l1and2mask = (0 <= l1) & (l1 <= x-1) & (l2 <= y-1) & (0 <= l2)
-    l1 = l1[l1and2mask]
-    l2 = l2[l1and2mask]
-    Xi = Xi[l1and2mask]
-    Yi = Yi[l1and2mask]
-    # logging.debug(f'I shape type: {I.shape}')
-    # logging.debug(f'img shape type: {img.shape}')
-    # logging.debug(f'l1 shape type: {l1.shape}')
-    # logging.debug(f'Xi shape type: {Xi.shape}')
-    #logging.debug(f'MATRIX : {I[l1, l2]}')
-    img[Xi, Yi] = I[l1.astype(np.uint16), l2.astype(np.uint16)]
-    return img.astype(np.uint8)
-
-
-def warpAffine2(I, M):
-    a, b = M[..., :2].T, M[..., 2]
-    x, y = I.shape[:2]
-    Xi, Yi = np.mgrid[0:x, 0:y]
-    Xi = Xi.ravel().astype(np.uint16)
-    Yi = Yi.ravel().astype(np.uint16)
-    Iindex = np.column_stack((Xi, Yi))
-    #logging.debug(f'iindex : {Iindex[:10,:]}')
-    Inew_index = np.matmul(Iindex, a) + b
-    #logging.debug(f'new iindex : {Inew_index[:10,:]}')
-    img = np.zeros(I.shape)
-
-    l1and2mask = (0 <= Inew_index[..., 0]) & (Inew_index[..., 0] <= x-1) & (Inew_index[..., 1] <= y-1) & (0 <= Inew_index[..., 1])
+    l1and2mask = (0 <= Inew_index_x) & (Inew_index_x <= x-1) & (Inew_index_y <= y-1) & (0 <= Inew_index_y)
 
     Xi = Xi[l1and2mask]
     Yi = Yi[l1and2mask]
-
-    bil_int = bilinear_interpolation(Inew_index, l1and2mask, I)
-
-
-
-    img[Xi, Yi] = bil_int
+    Inew_index_x = Inew_index_x[l1and2mask]
+    Inew_index_y = Inew_index_y[l1and2mask]
+    New_pixels = None
+    if interpolation == "bilinear":
+        New_pixels = bilinear_interpolation(Inew_index_x, Inew_index_y, I)
+    else:
+        New_pixels = I[Inew_index_x.astype(np.uint16), Inew_index_y.astype(np.uint16)]
+    img[Xi, Yi] = New_pixels
     return img.astype(np.uint8)
 
 
-def bilinear_interpolation(idxs, mask, img):
-    def helper(a):
-        abc = np.empty((a.shape[0], a.shape[1] + 2))
-        abc[:, :2] = a[:, :2] % 1
-        abc[:, 2:] = 1 - abc[:, 0:2]
+def bilinear_interpolation(idx1, idx2, img):
+    x0 = (1 - idx1 % 1)[:, None] * [1, 1, 1]
+    x1 = (idx1 % 1)[:, None] * [1, 1, 1]
 
-        cde = np.empty((a.shape[0], 4))
-        cde[:, 0] = f(a[:, 0])
-        cde[:, 1] = f(a[:, 1])
-        cde[:, 2] = g(a[:, 0])
-        cde[:, 3] = g(a[:, 1])
-        return abc, cde.astype(np.uint16)
+    y0 = (1 - idx2 % 1)[:, None] * [1, 1, 1]
+    y1 = (idx2 % 1)[:, None] * [1, 1, 1]
 
-    idxs = idxs[mask]
-    data, data2 = helper(idxs)
+    floor_x = np.floor(idx1).astype(np.uint16)
+    floor_y = np.floor(idx2).astype(np.uint16)
 
-    x0 = data[:, 2][:, None] * [1, 1, 1]
-    x1 = data[:, 0][:, None] * [1, 1, 1]
+    ceil_x = np.ceil(idx1).astype(np.uint16)
+    ceil_y = np.ceil(idx2).astype(np.uint16)
 
-    y0 = data[:, 3][:, None] * [1, 1, 1]
-    y1 = data[:, 1][:, None] * [1, 1, 1]
+    q11 = img[floor_x, floor_y]
+    q12 = img[floor_x, ceil_y]
+    q21 = img[ceil_x, floor_y]
+    q22 = img[ceil_x, ceil_y]
 
-    q11 = img[data2[:, 0], data2[:, 1]]
-    q12 = img[data2[:, 0], data2[:, 3]]
-    q21 = img[data2[:, 2], data2[:, 1]]
-    q22 = img[data2[:, 2], data2[:, 3]]
-
-    res = x0 * y0 * q11 + x1 * y0 * q21 + x0 * y1 * q12 + x1 * y1 * q22
-    return res
+    return x0 * y0 * q11 + x1 * y0 * q21 + x0 * y1 * q12 + x1 * y1 * q22
 
 
 def apply_kernel(img, kernel):
@@ -254,56 +198,3 @@ def apply_kernel(img, kernel):
     padded[p:-p, p:-p, :] = np.add.reduce([padded[x:(img_x - (k - x - 1)), y:(img_y - (k - y - 1)), :] * kernel[x, y]
                                            for x in range(k) for y in range(k)])
     return np.clip(padded[p:-p, p:-p, :], 0, 255).astype(np.uint8)
-
-# def bilinear_interpolation(idxs, mask, img):
-#     def helper(a):
-#         abc = np.empty((a.shape[0], a.shape[1] + 2))
-#         abc[:, 0] = a[:, 1] % 1
-#         abc[:, 1] = a[:, 0] % 1
-#         abc[:, 2:] = 1 - abc[:, 0:2]
-#
-#         cde = np.empty((a.shape[0], 4))
-#         cde[:, 1] = f(a[:, 0])
-#         cde[:, 0] = f(a[:, 1])
-#         cde[:, 3] = g(a[:, 0])
-#         cde[:, 2] = g(a[:, 1])
-#         return abc, cde.astype(np.uint16)
-#     #logging.debug(f'idxs before: {idxs.shape}')
-#     idxs = idxs[mask]
-#     #logging.debug(f'idxs after: {idxs.shape}')
-#     data, data2 = helper(idxs)
-#     rows = data.shape[0]
-#
-#     #x = np.empty((2, rows, 3))
-#     x0 = data[:, 2][:, None] * [1, 1, 1]
-#     x1 = data[:, 0][:, None] * [1, 1, 1]
-#
-#     #y = np.empty((2, rows, 3)) # menjaj MOZDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-#     y0 = data[:, 3][:, None] * [1, 1, 1]
-#     y1 = data[:, 1][:, None] * [1, 1, 1]
-#
-#     #q = np.empty((2, 2, rows, 3))
-#
-#     q11 = img[data2[:, 0], data2[:, 1]]
-#     q12 = img[data2[:, 0], data2[:, 3]]
-#     q21 = img[data2[:, 2], data2[:, 1]]
-#     q22 = img[data2[:, 2], data2[:, 3]]
-#
-#     logging.debug(f'idxs: {idxs[0, ::-1]}')
-#     logging.debug(f'data: {data[0]}')
-#     logging.debug(f'data2: {data2[0]}')
-#     logging.debug(f'q11: {q11[0]}')
-#     logging.debug(f'q12: {q12[0]}')
-#     logging.debug(f'q21: {q21[0]}')
-#     logging.debug(f'q22: {q22[0]}')
-#     logging.debug(f'data2[:5, 0] = {data2[:5, 0]}')
-#     logging.debug(f'data2[:5, 1] = {data2[:5, 1]}')
-#
-#
-#
-#
-#     res = x0 * y0 * q11 + x1 * y0 * q21 + x0 * y1 * q12 + x1 * y1 * q22
-#     #res = np.rint(res).astype(np.uint8)
-#     logging.debug(f'res[0] : {res[0]}')
-#
-#     return res
