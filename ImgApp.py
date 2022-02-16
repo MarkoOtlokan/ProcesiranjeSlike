@@ -9,10 +9,6 @@ import logging
 import time
 
 
-## mozda urediti init_ui()...
-##upper layopupt mozda ne treba ????????????????????????????????????????
-
-# change event 99 ??? ako mozes da promenis
 class MyWindow(QMainWindow):
     def __init__(self, pp):
         super().__init__()
@@ -21,11 +17,10 @@ class MyWindow(QMainWindow):
         self.filepath = None
         self.init_ui()
 
-
     def init_ui(self):
         self.label = QtWidgets.QLabel(self)
         self.label.setScaledContents(True)
-        self.label.setMinimumSize(30, 30)
+        self.label.setMinimumSize(250, 250)
 
         outer_layout = QVBoxLayout()
 
@@ -41,30 +36,15 @@ class MyWindow(QMainWindow):
         outer_layout.addLayout(upper_layout)
         outer_layout.addLayout(bottom_layout)
 
-        #self.c_box = QtWidgets.QComboBox(self)
-        #font = QtGui.QFont()
-        #font.setFamily("Sans Serif")
-        #font.setPointSize(10)
-        #self.c_box.setFont(font)
-        #self.c_box.setLayoutDirection(QtCore.Qt.LeftToRight)
-
-        #self.tab = ReadTabW.getTab(self.clicked, self.pp.change_orig)
-        self.tab = ReadTabW.getTab(self.clicked, lambda: self.set_img(self.pp.orig_img), self.pp.change_orig)
+        self.tab = ReadTabW.getTab(self.clicked)
         upper_layout.addWidget(self.tab)
 
         push_button = QtWidgets.QPushButton()
-        push_button.setText("save changes")
+        push_button.setText("apply transformation")
         push_button.clicked.connect(self.pp.change_orig)
         upper_layout.addWidget(push_button)
 
-        #for t in self.pp.trans():
-        #    self.c_box.addItem(t)
-
-        #upper_layout.addWidget(self.c_box)
-        #upper_layout.addWidget(self.push_button)
-
         menubar = self.menuBar()
-
         self.menu_file = QtWidgets.QMenu(menubar)
         self.menu_file.setTitle("File")
 
@@ -74,7 +54,6 @@ class MyWindow(QMainWindow):
         self.actionopen = QtWidgets.QAction(self)
         self.actionsave = QtWidgets.QAction(self)
 
-
         self.actionopen.setText("open")
         self.actionopen.setShortcut("Ctrl+o")
         self.actionopen.triggered.connect(self.open_image)
@@ -82,22 +61,15 @@ class MyWindow(QMainWindow):
         self.actionsave.setShortcut("Ctrl+s")
         self.actionsave.triggered.connect(self.save_image)
 
-        self.open_image("monaliza.jpg")
-
         self.menu_file.addAction(self.actionopen)
         self.menu_file.addAction(self.actionsave)
 
         menubar.addAction(self.menu_file.menuAction())
 
-
     def set_img(self, image):
-        """ This function will take image input and resize it
-            only for display purpose and convert it to QImage
-            to set at the label.
-        """
         if image is None:
             return
-        frame = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        frame = image[...,::-1].copy()
         image = QImage(frame, frame.shape[1], frame.shape[0], frame.strides[0], QImage.Format_RGB888)
         self.label.setPixmap(QtGui.QPixmap.fromImage(image))
 
@@ -113,12 +85,12 @@ class MyWindow(QMainWindow):
         self.label.setPixmap(pixmap)
 
     def save_image(self):
-        if self.pp.img is None:
+        if self.pp.orig_img is None:
             return
         image_path, ext = QFileDialog.getSaveFileName(filter="JPG(*.jpg);;PNG(*.png)")
         if image_path:
             image_path = image_path + ext[-5:-1]
-            cv2.imwrite(image_path, self.pp.img)
+            cv2.imwrite(image_path, self.pp.orig_img)
             logging.debug(f'Image saved as: {image_path}')
 
     def changeEvent(self, event):
@@ -126,13 +98,14 @@ class MyWindow(QMainWindow):
         if event.type() == 99:
             self.adjustSize()
 
-    def clicked(self, **pars):
+    def clicked(self):
         if self.label.pixmap():
             trans = self.tab.tabText(self.tab.currentIndex())
-            logging.debug(f"click - Trans: {trans} and pars: {pars}")
+            pars = self.tab.widget(self.tab.currentIndex()).give_vals()
+            logging.debug(f"click - Transformation: {trans} \npassed parameters: {pars}")
             start_time = time.time()
             img = self.pp.transform(trans, **pars)
-            logging.debug(f"time after: {time.time() - start_time}")
+            logging.debug(f"done in: {round(time.time() - start_time, 5)} s")
             self.set_img(img)
 
 

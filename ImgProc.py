@@ -3,9 +3,7 @@ import time
 import cv2
 import numpy as np
 import func
-from itertools import cycle
 import logging
-from math import tan, sin, cos, pi
 from scipy.interpolate import UnivariateSpline
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
@@ -30,16 +28,19 @@ class PP:
     def __init__(self):
         self.img = None
         self.orig_img = None
+        self.blurred = None
+        self.sharpen = None
         self.name2Trans = {"contrast": self.func2, "rotation": self.func3,
                            "brightness": self.func1, "saturation": self.func4,
                            "warmth": self.func5, "fade": self.func6,
                            "highlight": self.func7, "shadow": self.func8,
-                           "zoom": self.func9
+                           "zoom": self.func9, "sharpen": self.func11,
+                           "tilt": self.func12, "vignette": self.func10
                            }
 
     def read_img(self, filepath):
         self.img = cv2.imread(filepath)
-        self.orig_img = self.img
+        self.change_orig()
 
     # Ako transform vraca None ako se funkcija ne moze odraditi
     # u suprotnom vraca modifikovanu sliku.
@@ -54,6 +55,8 @@ class PP:
 
     def change_orig(self):
         self.orig_img = self.img
+        self.blurred = None
+        self.sharpen = None
         logging.debug(f"org image changed\n")
 
     def func1(self, add_brightness=0):
@@ -62,7 +65,6 @@ class PP:
         return True
 
     def func2(self, p=0):
-        self.func4(round(p * (-1) * 2.55))
         p = p / 100
         p += 1
 
@@ -78,33 +80,20 @@ class PP:
 
         contrast = np.array([help(i) for i in range(0, 256)]).clip(0, 255).astype('uint8')
         logging.debug(f"lut table: {contrast}\n")
-        #self.img = np.vectorize(dict(enumerate(contrast)).get)(self.img)
-        #self.img = np.take(contrast, self.img)
-        self.img = contrast[self.img]
-        #lut = np.dstack((contrast, contrast, contrast))
-        #self.img = apply_lut(self.img, lut)
+        self.img = contrast[self.orig_img]
         return True
 
-    def func3(self, angle=0, scale=1.0):
-        scale /= 10
-        center_point = np.array(self.orig_img.shape[:2][::-1]) / 2
+    def func3(self, angle, interpolation):
+        center_point = np.array(self.orig_img.shape[:2]) / 2
         logging.debug(f'specific point: {center_point}')
-        self.img = func.rotate(self.orig_img, angle, center_point, scale)
+        warp_mat = func.getRotationMatrix2D(center_point, angle, 1.0)
+        self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
         return True
 
     def saturation_helper(self, org_img, sat):
-        def non_overflowing_sum(a, b):
-            c = np.int16(a) + b
-            c[np.where(c > 255)] = 255
-            c[np.where(c < 0)] = 0
-            return np.uint8(c)
-
         hsv = func.rgb_to_hsv_vectorized(org_img)
-        h, s, v = np.transpose(hsv, (2, 0, 1))
-        s = non_overflowing_sum(s, sat)
-
-        final_hsv = np.dstack((h, s, v))
-        self.img = func.hsv_to_bgr_vectorized(final_hsv)
+        hsv[..., 1] = np.clip(hsv[..., 1] + [sat], 0, 255).astype(np.uint8)
+        self.img = func.hsv_to_bgr_vectorized(hsv)
 
     def func4(self, sat):
         self.saturation_helper(self.orig_img, sat)
@@ -118,16 +107,11 @@ class PP:
 
         lut = np.dstack((decr, identity, incr))
         self.img = apply_lut(self.orig_img, lut)
-
-        sat_const = warm * 50
-        self.saturation_helper(self.img, sat_const)
         return True
 
     def func6(self, factor=0, gray=0):
         factor = 1 - (factor / 10)
-        fade = np.zeros_like(self.orig_img)
-        fade[:, :] = (gray, gray, gray)
-        self.img = ((self.orig_img * factor) + (fade * (1 - factor))).astype('uint8')
+        self.img = func.add_weighted(self.orig_img, gray, factor)
         return True
 
     def func7(self, highlight=0, pixel=128):
@@ -160,11 +144,36 @@ class PP:
         self.img = shadowValue[self.orig_img]
         return True
 
-    def func9(self, scale=1.0, x=0, y=0):
+    def func9(self, scale, x, y, interpolation):
         scale /= -10
-        shape = self.orig_img.shape[:2][::-1]
+        shape = self.orig_img.shape[:2]
         y_max, x_max = shape
-        specific_point = np.rint([y*y_max/100, x*x_max/100])
-        logging.debug(f'specific point: {specific_point}')
-        self.img = func.rotate(self.orig_img, 0, specific_point, scale)
+        center_point = np.rint([y * y_max / 100, x * x_max / 100])
+        warp_mat = func.getRotationMatrix2D(center_point, 0, scale)
+        self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
+        return True
+
+    def func10(self, move_h, move_v, size):
+        size /= 10
+        move_h /= 10
+        move_v /= 10
+        mask = func.radial_mask(self.orig_img.shape[:2], (move_h, move_v), size)
+        self.img = np.rint(self.orig_img * mask).astype(np.uint8)
+        return True
+
+    def func11(self, step):
+        self.img = self.orig_img
+        step /= 10
+        if self.sharpen is None:
+            self.sharpen = func.apply_kernel(self.orig_img, func.sharpen3)
+        self.img = func.add_weighted(self.sharpen, self.orig_img, step)
+        return True
+
+    def func12(self, size=10, move=0, horizontal=True):
+        size /= 10
+        move /= 10
+        if self.blurred is None:
+            self.blurred = func.apply_kernel(self.orig_img, func.blur3)
+        mask = func.linear_mask(self.orig_img.shape[:2], move, size, horizontal)
+        self.img = np.rint(self.orig_img * mask + self.blurred * (1 - mask)).astype(np.uint8)
         return True
