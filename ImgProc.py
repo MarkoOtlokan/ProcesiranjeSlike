@@ -1,27 +1,9 @@
-import time
-
 import cv2
 import numpy as np
 import func
 import logging
-from scipy.interpolate import UnivariateSpline
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
-
-
-def create_lut(x, y, factor=0, my_range=(0, 256)):
-    for ind in range(len(y)):
-        temp = y[ind] - x[ind]
-        y[ind] = x[ind] + factor * temp
-    spl = UnivariateSpline(x, y)
-    return spl(range(*my_range)).astype(np.uint8)
-
-
-def apply_lut(img, lut):
-    img2 = img.copy()
-    for i in range(img2.shape[2]):
-        img2[:, :, i] = lut[0, :, i][img2[:, :, i]]
-    return img2
 
 
 class PP:
@@ -42,10 +24,6 @@ class PP:
         self.img = cv2.imread(filepath)
         self.change_orig()
 
-    # Ako transform vraca None ako se funkcija ne moze odraditi
-    # u suprotnom vraca modifikovanu sliku.
-    # Funkcije koje transform zove vracaju True i False/None
-    # ako su uspesno/neuspesno izvrsile
     def transform(self, t, **pars):
         if self.name2Trans[t](**pars):
             return self.img
@@ -59,12 +37,16 @@ class PP:
         self.sharpen = None
         logging.debug(f"org image changed\n")
 
-    def func1(self, add_brightness=0):
+    # brightness
+    def func1(self, add_brightness):
+        # add_brightness [-255, 255]
         pixel_add = [add_brightness] * 3
         self.img = np.clip(self.orig_img + pixel_add, 0, 255).astype(np.uint8)
         return True
 
-    def func2(self, p=0):
+    # contrast
+    def func2(self, p):
+        # p [-100, 100]
         p = p / 100
         p += 1
 
@@ -72,79 +54,96 @@ class PP:
             if p > 1:
                 abcd = None
                 if y < 128:
-                    abcd = (y - 128 * p) * p + 128
+                    abcd = (y - 128 * p) * p + 128 # tamniji -> jos tamniji
                 else:
-                    abcd = (y - 128) * p + p * 128
+                    abcd = (y - 128) * p + p * 128 # svetliji -> jos svetliji
                 return abcd
-            return (y - 128) * p + 128
+            return (y - 128) * p + 128 # svi ka sivoj
 
         contrast = np.array([help(i) for i in range(0, 256)]).clip(0, 255).astype('uint8')
-        logging.debug(f"lut table: {contrast}\n")
+        logging.debug(f"lut table: \n{contrast}\n")
         self.img = contrast[self.orig_img]
         return True
 
+    # rotacija
     def func3(self, angle, interpolation):
+        # angle [-25, 25]
+        # interpolation = #{'bilinear', '1 near neighbor'}
         center_point = np.array(self.orig_img.shape[:2]) / 2
         logging.debug(f'specific point: {center_point}')
         warp_mat = func.getRotationMatrix2D(center_point, angle, 1.0)
         self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
         return True
 
+    # saturacija
     def saturation_helper(self, org_img, sat):
         hsv = func.rgb_to_hsv_vectorized(org_img)
         hsv[..., 1] = np.clip(hsv[..., 1] + [sat], 0, 255).astype(np.uint8)
         self.img = func.hsv_to_bgr_vectorized(hsv)
 
+    # saturacija
     def func4(self, sat):
+        # sat [-255, 255]
         self.saturation_helper(self.orig_img, sat)
         return True
 
-    def func5(self, warm=0):
+    # warmth
+    def func5(self, warm):
+        # warm [0, 10]
         warm = warm / 10
-        incr = create_lut([0, 50, 100, 150, 200, 245, 256], [0, 58, 124, 190, 229, 247, 256], warm)
-        decr = create_lut([0, 50, 100, 150, 200, 245, 256], [0, 41, 80, 123, 184, 212, 246], warm)
+        incr = func.create_lut([0, 50, 100, 150, 200, 245, 256], [0, 58, 124, 190, 229, 247, 256], warm)
+        decr = func.create_lut([0, 50, 100, 150, 200, 245, 256], [0, 41, 80, 123, 184, 212, 246], warm)
         identity = np.arange(256, dtype=np.dtype('uint8'))
 
-        lut = np.dstack((decr, identity, incr))
-        self.img = apply_lut(self.orig_img, lut)
+        lut = np.dstack((decr, identity, incr))  # BGR!
+        self.img = func.apply_lut(self.orig_img, lut)
         return True
 
-    def func6(self, factor=0, gray=0):
+    # fade
+    def func6(self, factor, gray):
+        # factor [0, 10]
+        # gray [0, 255]
         factor = 1 - (factor / 10)
         self.img = func.add_weighted(self.orig_img, gray, factor)
         return True
 
-    def func7(self, highlight=0, pixel=128):
+    # highlight
+    def func7(self, highlight):
+        # highlight [-100, 100]
         highlight = highlight / 100
-        logging.debug(f' pixel value: {pixel}')
         fromm = [128, 138, 150, 180, 210, 240, 253, 255]
         too = [128, 149, 174, 219, 238, 248, 252, 255]
         if highlight < 0:
             too = [128, 135, 141, 153, 179, 201, 230, 243]
 
-        non_change = np.arange(pixel).astype(np.uint8)
-        changed = create_lut(fromm, too, abs(highlight), (pixel, 256))
+        non_change = np.arange(128).astype(np.uint8)
+        changed = func.create_lut(fromm, too, abs(highlight), (128, 256))
         highlightValue = np.concatenate((non_change, changed))
-        logging.debug(f"lut table: {highlightValue}\n")
+        logging.debug(f"lut table: \n{highlightValue}\n")
         self.img = highlightValue[self.orig_img]
         return True
 
-    def func8(self, shadow=0, pixel=128):
+    # shadow
+    def func8(self, shadow):
+        # shasdow [-100, 100]
         shadow = shadow / 100
-        logging.debug(f' pixel value: {pixel}')
         fromm = [0, 20, 40, 60, 80, 100, 120, 125, 128]
         too = [0, 16, 21, 30, 37, 49, 75, 111, 128]
         if shadow < 0:
             too = [0, 22, 50, 80, 109, 119, 126, 127, 128]
 
-        non_change = np.arange(pixel, 256).astype(np.uint8)
-        changed = create_lut(fromm, too, abs(shadow), (0, pixel))
+        non_change = np.arange(128, 256).astype(np.uint8)
+        changed = func.create_lut(fromm, too, abs(shadow), (0, 128))
         shadowValue = np.concatenate((changed, non_change))
-        logging.debug(f"lut table: {shadowValue}\n")
+        logging.debug(f"lut table: \n{shadowValue}\n")
         self.img = shadowValue[self.orig_img]
         return True
 
+    # zoom
     def func9(self, scale, x, y, interpolation):
+        # scale [-10, -1]
+        # x, y [0, 100]
+        # interpolation = #{'bilinear', '1 near neighbor'}
         scale /= -10
         shape = self.orig_img.shape[:2]
         y_max, x_max = shape
@@ -153,7 +152,9 @@ class PP:
         self.img = func.warpAffine(self.orig_img, warp_mat, interpolation)
         return True
 
+    # vignette
     def func10(self, move_h, move_v, size):
+        # move_h, move_v, size [0, 10]
         size /= 10
         move_h /= 10
         move_v /= 10
@@ -161,7 +162,9 @@ class PP:
         self.img = np.rint(self.orig_img * mask).astype(np.uint8)
         return True
 
+    # sharpen
     def func11(self, step):
+        # step [0, 10]
         self.img = self.orig_img
         step /= 10
         if self.sharpen is None:
@@ -169,7 +172,10 @@ class PP:
         self.img = func.add_weighted(self.sharpen, self.orig_img, step)
         return True
 
-    def func12(self, size=10, move=0, horizontal=True):
+    # tilt
+    def func12(self, size, move, horizontal):
+        # size, move [0, 10]
+        # horizontal #{True, False}
         size /= 10
         move /= 10
         if self.blurred is None:
