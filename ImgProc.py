@@ -153,13 +153,17 @@ class PP:
         return True
 
     # vignette
-    def func10(self, move_h, move_v, size):
+    def func10(self, move_h, move_v, size, mask_visible):
         # move_h, move_v, size [0, 10]
         size /= 10
         move_h /= 10
         move_v /= 10
-        mask = func.radial_mask(self.orig_img.shape[:2], (move_h, move_v), size)
-        self.img = np.rint(self.orig_img * mask).astype(np.uint8)
+        mask = func.radial_mask(self.orig_img.shape[:2], (move_h, move_v), size) # mask [0, 1]
+        logging.debug(f'mask values \n: {mask}')
+        if not mask_visible:
+            self.img = np.rint(self.orig_img * mask).astype(np.uint8)
+        else:
+            self.img = np.rint(255 * mask).astype(np.uint8)
         return True
 
     # sharpen
@@ -173,7 +177,7 @@ class PP:
         return True
 
     # tilt
-    def func12(self, size, move, horizontal):
+    def func12(self, size, move, horizontal, mask_visible):
         # size, move [0, 10]
         # horizontal #{True, False}
         size /= 10
@@ -181,5 +185,8 @@ class PP:
         if self.blurred is None:
             self.blurred = func.apply_kernel(self.orig_img, func.blur3)
         mask = func.linear_mask(self.orig_img.shape[:2], move, size, horizontal)
-        self.img = np.rint(self.orig_img * mask + self.blurred * (1 - mask)).astype(np.uint8)
+        if not mask_visible:
+            self.img = np.rint(self.orig_img * mask + self.blurred * (1 - mask)).astype(np.uint8)
+        else:
+            self.img = np.rint(255 * mask).astype(np.uint8)
         return True

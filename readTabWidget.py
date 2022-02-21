@@ -150,7 +150,11 @@ class ReadTabW:
         sl3.setValue(5)
         sl3.setSingleStep(1)
 
-        w10 = MyWidget((sl1, sl2, sl3), name="vignette", slot=slot)
+        cbox1 = QCheckBox()
+        cbox1.setObjectName("mask_visible")
+        cbox1.setChecked(False)
+
+        w10 = MyWidget((sl1, sl2, sl3, cbox1), name="vignette", slot=slot)
         # Sharpen
         sl1 = QSlider(Qt.Horizontal)
         sl1.setObjectName("step")
@@ -180,7 +184,11 @@ class ReadTabW:
         cbox1.setObjectName("horizontal")
         cbox1.setChecked(True)
 
-        w12 = MyWidget((sl1, sl2, cbox1), name="tilt", slot=slot)
+        cbox2 = QCheckBox()
+        cbox2.setObjectName("mask_visible")
+        cbox2.setChecked(False)
+
+        w12 = MyWidget((sl1, sl2, cbox1, cbox2), name="tilt", slot=slot)
 
         tab.addTab(w, w.objectName())
         tab.addTab(w2, w2.objectName())
