@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+from scipy.interpolate import UnivariateSpline
 
 idk = np.array([[0, -1, 0],
                 [-1, 4, -1],
@@ -37,6 +38,21 @@ blur3 = np.array([[1,  4,  6,  4, 1],
 
 def add_weighted(img, img2, factor):
     return ((img * factor) + (img2 * (1 - factor))).astype('uint8')
+
+
+def create_lut(x, y, factor=0, my_range=(0, 256)):
+    for ind in range(len(y)):
+        temp = y[ind] - x[ind]
+        y[ind] = x[ind] + factor * temp
+    spl = UnivariateSpline(x, y)
+    return spl(range(*my_range)).astype(np.uint8)
+
+
+def apply_lut(img, lut):
+    img2 = img.copy()
+    for i in range(img2.shape[2]):
+        img2[:, :, i] = lut[0, :, i][img2[:, :, i]]
+    return img2
 
 
 def radial_mask(shape, move, size):
